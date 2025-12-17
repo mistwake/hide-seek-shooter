@@ -14,7 +14,7 @@ import java.util.Random;
 import tmd.model.TBenefitModel;
 import tmd.model.BulletObject;
 import tmd.model.RockObject;
-import javax.swing.JOptionPane; // import ini penting buat popup
+import javax.swing.JOptionPane;
 
 public class GamePresenter {
     private GameWindow view;
@@ -36,9 +36,13 @@ public class GamePresenter {
         this.username = username;
         this.model = new TBenefitModel();
 
+        // ambil sisa peluru dari database buat modal awal main
+        // sesuai spesifikasi pdf, peluru sisa permainan sebelumnya bisa dipake lagi
+        this.currentAmmo = model.getSisaPeluru(username);
+
         view = new GameWindow();
 
-        // player spawn di tengah (y=300)
+        // player spawn di tengah
         player = new PlayerObject(400, 300);
 
         aliens = new ArrayList<>();
@@ -77,8 +81,19 @@ public class GamePresenter {
                 if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) player.setVelY(5);
                 if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) player.setVelX(-5);
                 if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) player.setVelX(5);
-                if (key == KeyEvent.VK_SPACE) {
+
+                // tombol f buat nembak sesuai request
+                if (key == KeyEvent.VK_F) {
                     shootBullet();
+                }
+
+                // tombol space buat berhenti dan kembali ke menu
+                // sesuai spesifikasi pdf halaman 6
+                if (key == KeyEvent.VK_SPACE) {
+                    gameTimer.stop();
+                    view.dispose();
+                    tmd.view.MenuWindow menu = new tmd.view.MenuWindow();
+                    new MenuPresenter(menu);
                 }
             }
 
@@ -96,27 +111,27 @@ public class GamePresenter {
     private void shootBullet() {
         if (currentAmmo > 0) {
             currentAmmo--;
-            // peluru kita (isEnemy = false) gerak ke bawah dari posisi player
+            // peluru kita isEnemy false gerak ke bawah dari posisi player
             BulletObject b = new BulletObject(player.getX() + 12, player.getY() + 30, false);
             bullets.add(b);
         }
     }
 
     private void gameLoop() {
-        // 1. update player
+        // update player
         player.tick();
 
-        // 2. update peluru
+        // update peluru
         for (int i = 0; i < bullets.size(); i++) {
             BulletObject b = bullets.get(i);
             b.tick();
 
-            // --- cek tabrakan peluru vs batu ---
+            // cek tabrakan peluru vs batu
             boolean hitRock = false;
             for (RockObject rock : rocks) {
                 if (b.getBounds().intersects(rock.getBounds())) {
 
-                    // fitur baru: kalau peluru alien kena batu, jadi amunisi kita
+                    // fitur baru kalau peluru alien kena batu jadi amunisi kita
                     if (b.isEnemy()) {
                         currentAmmo++;
                     }
@@ -129,15 +144,15 @@ public class GamePresenter {
             }
             if (hitRock) continue; // lanjut ke peluru berikutnya
 
-            // logika peluru musuh (gerak naik)
+            // logika peluru musuh gerak naik
             if (b.isEnemy()) {
-                // kena player -> game over
+                // kena player jadi game over
                 if (b.getBounds().intersects(player.getBounds())) {
                     gameOver();
                     return;
                 }
 
-                // peluru musuh lolos ke atas (miss) -> tambah amunisi
+                // peluru musuh lolos ke atas miss nambah amunisi
                 if (b.getY() < 0) {
                     bullets.remove(i);
                     i--;
@@ -145,7 +160,7 @@ public class GamePresenter {
                     currentAmmo++;
                 }
             }
-            // logika peluru player (gerak turun)
+            // logika peluru player gerak turun
             else {
                 // hapus kalau keluar layar bawah
                 if (b.getY() > 600) {
@@ -155,7 +170,7 @@ public class GamePresenter {
             }
         }
 
-        // 3. update alien
+        // update alien
         for (int i = 0; i < aliens.size(); i++) {
             AlienObject alien = aliens.get(i);
             alien.tick();
@@ -166,7 +181,7 @@ public class GamePresenter {
                 bullets.add(bullet);
             }
 
-            // cek collision: peluru kita vs alien
+            // cek collision peluru kita vs alien
             for (int j = 0; j < bullets.size(); j++) {
                 BulletObject b = bullets.get(j);
 
@@ -182,12 +197,12 @@ public class GamePresenter {
             }
         }
 
-        // 4. update wave
+        // update wave
         if (aliens.isEmpty()) {
             spawnWave();
         }
 
-        // 5. update hud
+        // update hud
         view.setGameStats(currentScore, currentMissed, currentAmmo);
         view.getCanvas().repaint();
     }
@@ -214,7 +229,7 @@ public class GamePresenter {
 
             boolean isSafe = true; // anggap aman dulu
 
-            // cek jarak ke sesama batu (biar gak dempet)
+            // cek jarak ke sesama batu biar gak dempet
             for (RockObject existingRock : rocks) {
                 double distance = Math.sqrt(
                         Math.pow(candidateRock.getX() - existingRock.getX(), 2) +
@@ -226,7 +241,16 @@ public class GamePresenter {
                 }
             }
 
-            // kalau semua aman, baru masukin
+            // cek jarak ke player biar ga spawn nimpah player di awal
+            double distToPlayer = Math.sqrt(
+                    Math.pow(candidateRock.getX() - 400, 2) +
+                            Math.pow(candidateRock.getY() - 300, 2)
+            );
+            if (distToPlayer < 100) {
+                isSafe = false;
+            }
+
+            // kalau semua aman baru masukin
             if (isSafe) {
                 rocks.add(candidateRock);
             }
@@ -244,7 +268,6 @@ public class GamePresenter {
         aliens.add(newAlien);
     }
 
-    // ini udah diubah biar ada tombol restart
     private void gameOver() {
         gameTimer.stop();
         // simpen skor dulu
@@ -266,10 +289,10 @@ public class GamePresenter {
         view.dispose(); // tutup window lama
 
         if (choice == 0) {
-            // kalo pilih restart, jalanin ulang gamenya
+            // kalo pilih restart jalanin ulang gamenya
             new GamePresenter(username);
         } else {
-            // kalo pilih menu, balik ke menu awal
+            // kalo pilih menu balik ke menu awal
             tmd.view.MenuWindow menu = new tmd.view.MenuWindow();
             new MenuPresenter(menu);
         }

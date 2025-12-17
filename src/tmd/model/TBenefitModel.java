@@ -8,7 +8,7 @@ public class TBenefitModel {
     private DBConnection db;
 
     public TBenefitModel() {
-        // pas model dibuat, langsung connect ke db
+        // pas model dibuat langsung connect ke db
         db = new DBConnection();
     }
 
@@ -44,7 +44,7 @@ public class TBenefitModel {
             ResultSet rs = db.getStatement().executeQuery(checkSql);
 
             if (!rs.next()) {
-                // kalau ga ada, baru kita insert data baru
+                // kalau ga ada baru kita insert data baru
                 String insertSql = "INSERT INTO tbenefit (username, skor, peluru_meleset, sisa_peluru) VALUES ('" + username + "', 0, 0, 0)";
                 db.getStatement().executeUpdate(insertSql);
             }
@@ -53,12 +53,31 @@ public class TBenefitModel {
         }
     }
 
-    public void updatePlayerData(String username, int skor, int peluruMeleset, int sisaPeluru) {
+    // fungsi baru buat ambil sisa peluru user dari db
+    // ini dipake pas game mulai biar peluru lanjut dari game sebelumnya
+    public int getSisaPeluru(String username) {
+        int sisa = 0;
+        try {
+            String sql = "SELECT sisa_peluru FROM tbenefit WHERE username = '" + username + "'";
+            ResultSet rs = db.getStatement().executeQuery(sql);
+            if (rs.next()) {
+                sisa = rs.getInt("sisa_peluru");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return sisa;
+    }
+
+    public void updatePlayerData(String username, int skorBaru, int melesetBaru, int sisaPeluruBaru) {
         try {
             // query update data berdasarkan username
-            String sql = "UPDATE tbenefit SET skor = " + skor +
-                    ", peluru_meleset = " + peluruMeleset +
-                    ", sisa_peluru = " + sisaPeluru +
+            // skor dan peluru meleset ditambahin ke nilai yang lama akumulasi
+            // sisa peluru ditimpa dengan nilai terbaru karena itu kondisi inventory terakhir
+            String sql = "UPDATE tbenefit SET " +
+                    "skor = skor + " + skorBaru + ", " +
+                    "peluru_meleset = peluru_meleset + " + melesetBaru + ", " +
+                    "sisa_peluru = " + sisaPeluruBaru +
                     " WHERE username = '" + username + "'";
 
             db.getStatement().executeUpdate(sql);
