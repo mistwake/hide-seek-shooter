@@ -3,12 +3,13 @@ package tmd.model;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 
+// kelas abstrak induk buat semua objek di game
 public abstract class GameObject {
-    // posisi dan ukuran
+    // variable posisi dan ukuran
     protected int x, y;
     protected int width, height;
 
-    // kecepatan gerak
+    // variable kecepatan gerak
     protected int speed;
 
     public GameObject(int x, int y, int width, int height, int speed) {
@@ -22,7 +23,7 @@ public abstract class GameObject {
     // method render wajib ada biar objek bisa digambar
     public abstract void render(Graphics g);
 
-    // ini buat deteksi tabrakan (collision) nanti
+    // ini buat deteksi tabrakan (collision)
     public Rectangle getBounds() {
         return new Rectangle(x, y, width, height);
     }

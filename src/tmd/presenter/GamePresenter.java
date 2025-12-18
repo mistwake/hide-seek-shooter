@@ -20,15 +20,20 @@ public class GamePresenter {
     private GameWindow view;
     private PlayerObject player;
     private Timer gameTimer;
+
+    // list buat nampung objek objek game
     private List<AlienObject> aliens;
+    private List<BulletObject> bullets;
+    private List<RockObject> rocks;
+
     private Random random;
+    private TBenefitModel model;
+
+    // variabel status permainan sementara
     private int currentScore = 0;
     private int currentMissed = 0;
     private int currentAmmo = 0;
     private String username;
-    private TBenefitModel model;
-    private List<BulletObject> bullets;
-    private List<RockObject> rocks;
 
     private int waveNumber = 0;
 
@@ -37,7 +42,7 @@ public class GamePresenter {
         this.model = new TBenefitModel();
 
         // ambil sisa peluru dari database buat modal awal main
-        // sesuai spesifikasi pdf, peluru sisa permainan sebelumnya bisa dipake lagi
+        // jadi peluru itu akumulasi dari game sebelumnya
         this.currentAmmo = model.getSisaPeluru(username);
 
         view = new GameWindow();
@@ -48,10 +53,11 @@ public class GamePresenter {
         aliens = new ArrayList<>();
         random = new Random();
 
-        // inisialisasi list rocks
+        // inisialisasi list rocks dan spawn rocks nya
         rocks = new ArrayList<>();
         spawnRocks();
 
+        // kasih referensi objek ke view biar bisa digambar
         view.setPlayer(player);
         view.setAliens(aliens);
         view.setRocks(rocks);
@@ -59,8 +65,10 @@ public class GamePresenter {
         bullets = new ArrayList<>();
         view.setBullets(bullets);
 
+        // siapin kontrol keyboard
         setupInput();
 
+        // timer jalan tiap 16ms
         gameTimer = new Timer(16, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -68,6 +76,7 @@ public class GamePresenter {
             }
         });
 
+        // mulai game
         gameTimer.start();
         view.setVisible(true);
     }
@@ -77,18 +86,18 @@ public class GamePresenter {
             @Override
             public void keyPressed(KeyEvent e) {
                 int key = e.getKeyCode();
+                // kontrol gerak player pake wasd atau arrow
                 if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) player.setVelY(-5);
                 if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) player.setVelY(5);
                 if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) player.setVelX(-5);
                 if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) player.setVelX(5);
 
-                // tombol f buat nembak sesuai request
+                // tombol 'f' buat nembak
                 if (key == KeyEvent.VK_F) {
                     shootBullet();
                 }
 
-                // tombol space buat berhenti dan kembali ke menu
-                // sesuai spesifikasi pdf halaman 6
+                // tombol 'space' buat berhenti dan kembali ke menu
                 if (key == KeyEvent.VK_SPACE) {
                     gameTimer.stop();
                     view.dispose();
@@ -100,6 +109,7 @@ public class GamePresenter {
             @Override
             public void keyReleased(KeyEvent e) {
                 int key = e.getKeyCode();
+                // pas tombol dilepas player berhenti gerak
                 if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) player.setVelY(0);
                 if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) player.setVelY(0);
                 if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) player.setVelX(0);
@@ -109,6 +119,7 @@ public class GamePresenter {
     }
 
     private void shootBullet() {
+        // cuma bisa nembak kalo ada peluru
         if (currentAmmo > 0) {
             currentAmmo--;
             // peluru kita isEnemy false gerak ke bawah dari posisi player
@@ -117,25 +128,27 @@ public class GamePresenter {
         }
     }
 
+    // loop utama game yang dipanggil terus menerus
     private void gameLoop() {
-        // update player
+        // update posisi player
         player.tick();
 
-        // update peluru
+        // loop update semua peluru
         for (int i = 0; i < bullets.size(); i++) {
             BulletObject b = bullets.get(i);
             b.tick();
 
-            // cek tabrakan peluru vs batu
+            // cek tabrakan peluru sama batu
             boolean hitRock = false;
             for (RockObject rock : rocks) {
                 if (b.getBounds().intersects(rock.getBounds())) {
 
-                    // fitur baru kalau peluru alien kena batu jadi amunisi kita
+                    // peluru alien miss ke batu, maka
                     if (b.isEnemy()) {
-                        currentAmmo++;
+                        currentAmmo++; // inc kita dapat peluru tambahan
                     }
 
+                    // hapus pelurunya
                     bullets.remove(i);
                     i--;
                     hitRock = true;
@@ -144,25 +157,25 @@ public class GamePresenter {
             }
             if (hitRock) continue; // lanjut ke peluru berikutnya
 
-            // logika peluru musuh gerak naik
+            // logika kalo peluru punya musuh
             if (b.isEnemy()) {
-                // kena player jadi game over
+                // kalo kena player berarti game over
                 if (b.getBounds().intersects(player.getBounds())) {
                     gameOver();
                     return;
                 }
 
-                // peluru musuh lolos ke atas miss nambah amunisi
+                // kalo peluru musuh lewat batas atas alias meleset
                 if (b.getY() < 0) {
                     bullets.remove(i);
                     i--;
-                    currentMissed++;
-                    currentAmmo++;
+                    currentMissed++; // inc itung statistik meleset
+                    currentAmmo++;   // inc kita dapet peluru tambahan dari musuh yang meleset
                 }
             }
-            // logika peluru player gerak turun
+            // logika kalo peluru punya player
             else {
-                // hapus kalau keluar layar bawah
+                // hapus kalo keluar layar bawah
                 if (b.getY() > 600) {
                     bullets.remove(i);
                     i--;
@@ -170,45 +183,47 @@ public class GamePresenter {
             }
         }
 
-        // update alien
+        // update semua alien
         for (int i = 0; i < aliens.size(); i++) {
             AlienObject alien = aliens.get(i);
             alien.tick();
 
-            // alien nembak acak ke atas
+            // alien nembak secara acak probabilitas kecil tiap frame
             if (random.nextDouble() < 0.01) {
                 BulletObject bullet = new BulletObject(alien.getX() + 15, alien.getY(), true);
                 bullets.add(bullet);
             }
 
-            // cek collision peluru kita vs alien
+            // cek tabrakan peluru player sama alien
             for (int j = 0; j < bullets.size(); j++) {
                 BulletObject b = bullets.get(j);
 
-                // cuma peluru kita yang bisa bunuh alien
+                // cuma peluru player yang bisa hancurin alien
                 if (!b.isEnemy() && b.getBounds().intersects(alien.getBounds())) {
-                    aliens.remove(i);
+                    aliens.remove(i); // hapus alien
                     i--;
-                    bullets.remove(j);
+                    bullets.remove(j); // hapus peluru
 
-                    currentScore += 10;
+                    currentScore += 10; // nambah skor
                     break;
                 }
             }
         }
 
-        // update wave
+        // spawn wave baru kalo alien abis
         if (aliens.isEmpty()) {
             spawnWave();
         }
 
-        // update hud
+        // update tampilan dan refresh gambar
         view.setGameStats(currentScore, currentMissed, currentAmmo);
         view.getCanvas().repaint();
     }
 
+    // logika spawn alien per gelombang
     private void spawnWave() {
         waveNumber++;
+        // alien makin banyak tiap wave maksimal 10
         int count = Math.min(3 + (waveNumber - 1), 10);
 
         for (int i = 0; i < count; i++) {
@@ -216,20 +231,20 @@ public class GamePresenter {
         }
     }
 
+    // inisialisasi batu pelindung di posisi acak
     private void spawnRocks() {
         int targetRocks = 5;
         int attempts = 0;
 
+        // coba spawn batu sampe target terpenuhi atau batas percobaan abis
         while (rocks.size() < targetRocks && attempts < 200) {
-
             int rockX = random.nextInt(720);
             int rockY = random.nextInt(350);
 
             RockObject candidateRock = new RockObject(rockX, rockY);
+            boolean isSafe = true;
 
-            boolean isSafe = true; // anggap aman dulu
-
-            // cek jarak ke sesama batu biar gak dempet
+            // pastiin batu ga numpuk sama batu lain
             for (RockObject existingRock : rocks) {
                 double distance = Math.sqrt(
                         Math.pow(candidateRock.getX() - existingRock.getX(), 2) +
@@ -241,7 +256,7 @@ public class GamePresenter {
                 }
             }
 
-            // cek jarak ke player biar ga spawn nimpah player di awal
+            // pastiin batu ga nimpa posisi spawn player
             double distToPlayer = Math.sqrt(
                     Math.pow(candidateRock.getX() - 400, 2) +
                             Math.pow(candidateRock.getY() - 300, 2)
@@ -250,17 +265,17 @@ public class GamePresenter {
                 isSafe = false;
             }
 
-            // kalau semua aman baru masukin
+            // kalo posisi aman masukin ke list
             if (isSafe) {
                 rocks.add(candidateRock);
             }
-
             attempts++;
         }
     }
 
+    // spawn satu alien di posisi acak bawah
     private void spawnAlien() {
-        int randomY = random.nextInt(50) + 480;
+        int randomY = random.nextInt(50) + 480; // area bawah
         int randomX = random.nextInt(750);
         int randomSpeed = random.nextInt(2) + 1;
 
@@ -268,6 +283,7 @@ public class GamePresenter {
         aliens.add(newAlien);
     }
 
+    // logika pas game over
     private void gameOver() {
         gameTimer.stop();
         // simpen skor dulu

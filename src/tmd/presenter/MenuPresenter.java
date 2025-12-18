@@ -15,12 +15,12 @@ public class MenuPresenter {
 
     public MenuPresenter(MenuWindow view) {
         this.view = view;
-        this.model = new TBenefitModel(); // presenter pegang akses ke database
+        this.model = new TBenefitModel(); // siapin model buat koneksi database
 
-        // pas awal jalan, langsung isi tabelnya
+        // muat data tabel pas pertama kali dibuka
         loadTableData();
 
-        // kasih logika buat tombol play
+        // kasih aksi buat tombol play
         view.getBtnPlay().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -28,21 +28,22 @@ public class MenuPresenter {
             }
         });
 
-        // kasih logika buat tombol quit
+        // kasih aksi buat tombol quit langsung keluar program
         view.getBtnQuit().addActionListener(e -> System.exit(0));
     }
 
+    // fungsi buat ngambil data dari db dan nampilin ke tabel
     private void loadTableData() {
-        // minta data ke model
+        // minta list player ke model
         List<Player> players = model.getAllPlayers();
 
-        // ambil tabel dari view
+        // ambil model tabel dari view biar bisa diisi
         DefaultTableModel tableModel = view.getTableModel();
 
-        // bersihin dulu isinya biar gak dobel
+        // kosongin dulu isinya biar ga numpuk
         tableModel.setRowCount(0);
 
-        // masukin data satu per satu
+        // loop buat ngisi baris tabel satu satu
         for (Player p : players) {
             tableModel.addRow(new Object[]{
                     p.getUsername(),
@@ -53,6 +54,7 @@ public class MenuPresenter {
         }
     }
 
+    // logika pas tombol play ditekan
     private void startGame() {
         String username = view.getUsername();
 
@@ -62,13 +64,13 @@ public class MenuPresenter {
             return;
         }
 
-        // simpan ke db lewat model
+        // simpen user baru ke database kalo emang belum ada
         model.addPlayerIfNew(username);
 
-        // tutup window menu biar gak numpuk
+        // tutup menu window
         view.dispose();
 
-        // kirim username ke game presenter
+        // mulai masuk ke game
         new GamePresenter(username);
     }
 }

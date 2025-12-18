@@ -9,86 +9,88 @@ import tmd.model.BulletObject;
 import tmd.model.RockObject;
 import java.io.File;
 import java.io.IOException;
-import javax.imageio.ImageIO; // import buat baca gambar
+import javax.imageio.ImageIO;
 
 public class GameWindow extends JFrame {
-    private GameCanvas canvas;
+    private GameCanvas canvas; // area buat ngegambar semua objek game
+
+    // referensi ke objek objek game yang mau digambar
     private PlayerObject player;
     private List<AlienObject> aliens;
     private List<BulletObject> bullets;
     private List<RockObject> rocks;
 
-    // variabel skor
+    // variabel buat nyimpen status game buat ditampilin di layar
     private int score = 0;
     private int missed = 0;
     private int ammo = 0;
 
-    // variabel gambar background
     private Image bgImage;
 
     public GameWindow() {
         setTitle("Hide and Seek Gameplay");
         setSize(800, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setResizable(false);
+        setResizable(false); // set ke false biar gabisa diresize
         setLocationRelativeTo(null);
 
-        // load gambar background
+        // muat gambar background
         try {
+            // kredit aset: background space diambil canva jg
             bgImage = ImageIO.read(new File("background.png"));
         } catch (IOException e) {
-            System.out.println("background.png ga ketemu, nanti layarnya putih polos.");
+            System.out.println("gagal memuat background.png");
             e.printStackTrace();
         }
 
+        // inisialisasi kanvas dan tempel ke frame
         canvas = new GameCanvas();
         add(canvas);
     }
 
-    // setter
+    // setter buat nerima data objek dari presenter
     public void setPlayer(PlayerObject player) { this.player = player; }
     public void setAliens(List<AlienObject> aliens) { this.aliens = aliens; }
     public void setBullets(List<BulletObject> bullets) { this.bullets = bullets; }
     public void setRocks(List<RockObject> rocks) { this.rocks = rocks; }
 
+    // akses ke canvas buat repaint nanti
     public JPanel getCanvas() { return canvas; }
 
+    // update status skor dan peluru buat ui
     public void setGameStats(int score, int missed, int ammo) {
         this.score = score;
         this.missed = missed;
         this.ammo = ammo;
     }
 
+    // kelas dalam buat ngatur penggambaran kustom
     class GameCanvas extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
 
-            // bg
+            // 1. gambar background dulu paling bawah
             if (bgImage != null) {
-                // gambar image seukuran layar penuh
                 g.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
             } else {
-                // fallback warna putih kalo gambar ga ketemu
+                // kalo gambar ga ada kasih warna putih poloss
                 g.setColor(Color.WHITE);
                 g.fillRect(0, 0, getWidth(), getHeight());
             }
 
-            // 2. baru gambar objek lain di atasnya
-
+            // 2. gambar objek objek game di atas background
             // gambar player
-            if (player != null) {
-                player.render(g);
-            }
+            if (player != null) player.render(g);
 
-            // gambar alien
+            // gambar alien alien
             if (aliens != null) {
                 for (int i = 0; i < aliens.size(); i++) {
                     aliens.get(i).render(g);
                 }
             }
 
-            // gambar batu
+            // gambar batu pelindung
             if (rocks != null) {
                 for (RockObject rock : rocks) {
                     rock.render(g);
@@ -102,8 +104,7 @@ public class GameWindow extends JFrame {
                 }
             }
 
-            // hud (skor)
-            // ganti warna font biar kebaca (misal kuning/putih)
+            // 3. gambar tulisan status di pojok kiri atas
             g.setColor(Color.YELLOW);
             g.setFont(new Font("Arial", Font.BOLD, 14));
             g.drawString("Skor: " + score, 20, 30);

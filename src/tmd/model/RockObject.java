@@ -8,43 +8,42 @@ import javax.imageio.ImageIO;
 
 public class RockObject extends GameObject {
 
-    // Variabel static untuk menyimpan gambar di memori (cuma 1 untuk semua batu)
     private static Image rockImage;
 
-    // Blok static ini jalan otomatis HANYA SEKALI saat program pertama kali butuh batu
+    // blok static buat load gambar pas awal
     static {
         try {
-            // Mencoba membaca file "rock.png" dari folder project root
+            // muat gambar batu dari file
+            // kredit aset: gambar dri canva
             rockImage = ImageIO.read(new File("rock.png"));
         } catch (IOException e) {
-            System.err.println("Error: Gambar batu tidak ditemukan! Pastikan rock.png ada di root folder project.");
+            System.err.println("error: gambar batu ga ketemu");
             e.printStackTrace();
-            // Kalau gambar gagal dimuat, program mungkin akan error nanti pas nge-render.
-            // Pastikan filenya bener ya.
         }
     }
 
     public RockObject(int x, int y) {
-        // UBAH DISINI: Ganti 50, 50 jadi 80, 80 biar lebih gede
+        // inisialisasi batu ukurannya lumayan gede 130x130 dan diem
         super(x, y, 130, 130, 0);
     }
 
     @Override
     public void render(Graphics g) {
-        // Jika gambar berhasil dimuat, gambar batunya
+        // gambar batu kalo asetnya ada
         if (rockImage != null) {
-            // g.drawImage menggambar image di posisi x, y dengan ukuran width, height
             g.drawImage(rockImage, x, y, width, height, null);
         }
-        // (Opsional) Jika gambar gagal muat, gambar kotak abu-abu sebagai cadangan
+        // kalo ga ada gambar pake kotak abu abu
         else {
             g.setColor(java.awt.Color.GRAY);
             g.fillRect(x, y, width, height);
         }
     }
 
-    // Batu tidak bergerak, method tick kosong saja
+    // karena batu itu benda mati jadi method tick kosong
     public void tick() {
-        // Do nothing
+        // do nothing
     }
 }
+
+// ini sejujurnya asteroid bu wkwk

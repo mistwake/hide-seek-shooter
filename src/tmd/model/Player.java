@@ -6,6 +6,7 @@ public class Player {
     private int peluruMeleset;
     private int sisaPeluru;
 
+    // konstruktor buat inisialisasi datanya
     public Player(String username, int skor, int peluruMeleset, int sisaPeluru) {
         this.username = username;
         this.skor = skor;

@@ -5,36 +5,43 @@ import java.awt.Graphics;
 
 public class PlayerObject extends GameObject {
 
-    private int velX = 0;
-    private int velY = 0;
+    private int velX = 0; // utk nyimpen kecepatan gerak horizontal
+    private int velY = 0; // utk nyimpen kecepatan gerak vertikal
 
     public PlayerObject(int x, int y) {
+        // kita panggil konstruktor induknya
+        // set posisi awal x y, terus ukurannya 30x30, sama speednya 5
         super(x, y, 30, 30, 5);
     }
 
     @Override
     public void render(Graphics g) {
+        // warnain player jadi biru
         g.setColor(Color.BLUE);
+        // gambar kotak sesuai posisi dan ukuran
         g.fillRect(x, y, width, height);
     }
 
-    // KEMBALI KE METHOD LAMA (Tanpa List<RockObject>)
+    // fungsi ini dipanggil terus menerus buat update posisi
     public void tick() {
-        // Gerak X
+        // update posisi x ditambah kecepatan saat ini
         x += velX;
 
-        // Batas layar kiri/kanan
+        // kita cek biar player ga bablas keluar layar kiri
         if (x < 0) x = 0;
+        // cek juga biar ga keluar layar kanan dikurangin lebar player sama margin dikit
         if (x > 800 - width - 15) x = 800 - width - 15;
 
-        // Gerak Y
+        // update posisi y ditambah kecepatan saat ini
         y += velY;
 
-        // Batas layar atas/bawah
+        // cek biar ga nembus atap
         if (y < 0) y = 0;
+        // cek biar ga nembus lantai bawah
         if (y > 600 - height - 40) y = 600 - height - 40;
     }
 
+    // ini setter buat ngubah kecepatan gerak dari input keyboard nanti
     public void setVelX(int velX) { this.velX = velX; }
     public void setVelY(int velY) { this.velY = velY; }
 }

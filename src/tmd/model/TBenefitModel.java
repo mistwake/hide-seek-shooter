@@ -8,26 +8,28 @@ public class TBenefitModel {
     private DBConnection db;
 
     public TBenefitModel() {
-        // pas model dibuat langsung connect ke db
+        // pas kelas model ini dibuat langsung kita hubungin ke database
         db = new DBConnection();
     }
 
-    // ambil semua data player buat ditampilin di tabel highscore
+    // fungsi buat ngambil semua data pemain dari tabel tbenefit
     public List<Player> getAllPlayers() {
         List<Player> players = new ArrayList<>();
         try {
-            // ambil data urut dari skor paling gede
+            // kita ambil semua data dan diurutin dari skor paling gede
             String sql = "SELECT * FROM tbenefit ORDER BY skor DESC";
             ResultSet rs = db.getStatement().executeQuery(sql);
 
+            // kita loop datanya satu per satu selama masih ada
             while (rs.next()) {
-                // masukin data baris per baris ke list
+                // ambil data dari tiap kolom terus masukin ke objek player
                 Player p = new Player(
                         rs.getString("username"),
                         rs.getInt("skor"),
                         rs.getInt("peluru_meleset"),
                         rs.getInt("sisa_peluru")
                 );
+                // masukin objek player tadi ke dalam list
                 players.add(p);
             }
         } catch (Exception e) {
@@ -36,15 +38,16 @@ public class TBenefitModel {
         return players;
     }
 
-    // fungsi buat nambah player baru pas tombol play ditekan
+    // fungsi buat nambahin pemain baru kalo belum ada di database
     public void addPlayerIfNew(String username) {
         try {
-            // cek dulu username nya udah ada belum
+            // cek dulu username nya udah ada belum di tabel
             String checkSql = "SELECT * FROM tbenefit WHERE username = '" + username + "'";
             ResultSet rs = db.getStatement().executeQuery(checkSql);
 
+            // kalo ternyata datanya ga ketemu (pemain baru)
             if (!rs.next()) {
-                // kalau ga ada baru kita insert data baru
+                // kita masukin data baru dengan nilai awal nol semua
                 String insertSql = "INSERT INTO tbenefit (username, skor, peluru_meleset, sisa_peluru) VALUES ('" + username + "', 0, 0, 0)";
                 db.getStatement().executeUpdate(insertSql);
             }
@@ -53,13 +56,15 @@ public class TBenefitModel {
         }
     }
 
-    // fungsi baru buat ambil sisa peluru user dari db
-    // ini dipake pas game mulai biar peluru lanjut dari game sebelumnya
+    // fungsi buat ngambil sisa peluru terakhir pemain dari database
     public int getSisaPeluru(String username) {
         int sisa = 0;
         try {
+            // ambil cuma kolom sisa peluru aja berdasarkan username
             String sql = "SELECT sisa_peluru FROM tbenefit WHERE username = '" + username + "'";
             ResultSet rs = db.getStatement().executeQuery(sql);
+
+            // kalo datanya ada kita simpen nilainya
             if (rs.next()) {
                 sisa = rs.getInt("sisa_peluru");
             }
@@ -69,17 +74,19 @@ public class TBenefitModel {
         return sisa;
     }
 
+    // update data skor dan peluru pemain setelah game over
     public void updatePlayerData(String username, int skorBaru, int melesetBaru, int sisaPeluruBaru) {
         try {
-            // query update data berdasarkan username
-            // skor dan peluru meleset ditambahin ke nilai yang lama akumulasi
-            // sisa peluru ditimpa dengan nilai terbaru karena itu kondisi inventory terakhir
+            // ini query buat update data
+            // skor dan peluru meleset kita tambah atau di akumulasi
+            // tapi sisa peluru kita timpa pake nilai terakhir karena itu kondisi inventory
             String sql = "UPDATE tbenefit SET " +
                     "skor = skor + " + skorBaru + ", " +
                     "peluru_meleset = peluru_meleset + " + melesetBaru + ", " +
                     "sisa_peluru = " + sisaPeluruBaru +
                     " WHERE username = '" + username + "'";
 
+            // jalanin perintah updatenya
             db.getStatement().executeUpdate(sql);
         } catch (Exception e) {
             e.printStackTrace();
