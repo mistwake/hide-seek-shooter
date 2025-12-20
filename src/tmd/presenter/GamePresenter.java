@@ -47,8 +47,8 @@ public class GamePresenter {
 
         view = new GameWindow();
 
-        // player spawn di tengah
-        player = new PlayerObject(400, 300);
+        // player spawn di tengah (koordinat disesuaikan dikit biar pas di canvas baru)
+        player = new PlayerObject(500, 400);
 
         aliens = new ArrayList<>();
         random = new Random();
@@ -122,8 +122,10 @@ public class GamePresenter {
         // cuma bisa nembak kalo ada peluru
         if (currentAmmo > 0) {
             currentAmmo--;
-            // peluru kita isEnemy false gerak ke bawah dari posisi player
-            BulletObject b = new BulletObject(player.getX() + 12, player.getY() + 30, false);
+            // player cmn bisa nembak lurus ke bawah
+            // Target X = posisi player, Target Y = posisi jauh di bawah (e.g. y + 1000)
+            BulletObject b = new BulletObject(player.getX() + 12, player.getY() + 30,
+                    player.getX() + 12, player.getY() + 1000, false);
             bullets.add(b);
         }
     }
@@ -165,8 +167,8 @@ public class GamePresenter {
                     return;
                 }
 
-                // kalo peluru musuh lewat batas atas alias meleset
-                if (b.getY() < 0) {
+                // dan cek juga kalo keluar kiri kanan atas
+                if (b.getY() < 0 || b.getY() > 800 || b.getX() < 0 || b.getX() > 1000) {
                     bullets.remove(i);
                     i--;
                     currentMissed++; // inc itung statistik meleset
@@ -176,7 +178,7 @@ public class GamePresenter {
             // logika kalo peluru punya player
             else {
                 // hapus kalo keluar layar bawah
-                if (b.getY() > 600) {
+                if (b.getY() > 800) {
                     bullets.remove(i);
                     i--;
                 }
@@ -190,7 +192,10 @@ public class GamePresenter {
 
             // alien nembak secara acak probabilitas kecil tiap frame
             if (random.nextDouble() < 0.01) {
-                BulletObject bullet = new BulletObject(alien.getX() + 15, alien.getY(), true);
+                // alien nembak mengarah ke posisi player saat ini (DIAGONAL)
+                // Kita oper koordinat player sebagai target
+                BulletObject bullet = new BulletObject(alien.getX() + 15, alien.getY(),
+                        player.getX(), player.getY(), true);
                 bullets.add(bullet);
             }
 
@@ -238,8 +243,9 @@ public class GamePresenter {
 
         // coba spawn batu sampe target terpenuhi atau batas percobaan abis
         while (rocks.size() < targetRocks && attempts < 200) {
-            int rockX = random.nextInt(720);
-            int rockY = random.nextInt(350);
+            // area spawn batu
+            int rockX = random.nextInt(900); // max width - margin
+            int rockY = random.nextInt(500); // area sebaran batu
 
             RockObject candidateRock = new RockObject(rockX, rockY);
             boolean isSafe = true;
@@ -256,10 +262,10 @@ public class GamePresenter {
                 }
             }
 
-            // pastiin batu ga nimpa posisi spawn player
+            // pastiin batu ga nimpa posisi spawn player (500, 400)
             double distToPlayer = Math.sqrt(
-                    Math.pow(candidateRock.getX() - 400, 2) +
-                            Math.pow(candidateRock.getY() - 300, 2)
+                    Math.pow(candidateRock.getX() - 500, 2) +
+                            Math.pow(candidateRock.getY() - 400, 2)
             );
             if (distToPlayer < 100) {
                 isSafe = false;
@@ -275,11 +281,13 @@ public class GamePresenter {
 
     // spawn satu alien di posisi acak bawah
     private void spawnAlien() {
-        int randomY = random.nextInt(50) + 480; // area bawah
-        int randomX = random.nextInt(750);
-        int randomSpeed = random.nextInt(2) + 1;
+        // area spawn alien
+        int randomY = random.nextInt(50) + 650; // area bawah (dekat 800)
+        int randomX = random.nextInt(950);
+        int fixedSpeed = 1;
 
-        AlienObject newAlien = new AlienObject(randomX, randomY, randomSpeed);
+        // player dimasukkan ke konstruktor alien biar bisa dikejar
+        AlienObject newAlien = new AlienObject(randomX, randomY, fixedSpeed, player);
         aliens.add(newAlien);
     }
 

@@ -6,65 +6,86 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 
 public class BulletObject extends GameObject {
-    private boolean isEnemy; // penanda ini peluru musuh atau punya kita (player)
+    private boolean isEnemy;
 
-    public BulletObject(int x, int y, boolean isEnemy) {
-        // set ukuran peluru kecil aja 10x10
-        // kalo punya musuh speednya 5 kalo punya kita lebih cepet 10
+    // variabel double diperlukan agar gerakan peluru bisa miring dengan halus
+    private double velX;
+    private double velY;
+    private double exactX, exactY; // posisi hitungan yang presisi (bisa menampung nilai koma)
+
+    public BulletObject(int x, int y, int targetX, int targetY, boolean isEnemy) {
+        // panggil pengaturan dasar dari induk (gameobject). kecepatan musuh 5, pemain 10.
         super(x, y, 10, 10, isEnemy ? 5 : 10);
         this.isEnemy = isEnemy;
+
+        // simpan posisi awal ke dalam variabel presisi
+        this.exactX = x;
+        this.exactY = y;
+
+        // logika membidik target (menggunakan perbandingan jarak)
+
+        // hitung selisih jarak mendatar (dx) dan tegak (dy) menuju target
+        double dx = targetX - x;
+        double dy = targetY - y;
+
+        // hitung panjang lintasan miring (diagonal) menggunakan rumus pythagoras
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        // hitung kecepatan gerak untuk setiap langkah
+        // caranya: jarak per sumbu dibagi jarak total, lalu dikalikan dengan kecepatan (speed)
+        if (distance != 0) {
+            this.velX = (dx / distance) * speed;
+            this.velY = (dy / distance) * speed;
+        } else {
+            // jaga-jaga jika target berada tepat di posisi yang sama dengan peluru (jarak 0)
+            this.velX = 0;
+            this.velY = 0;
+        }
     }
 
     @Override
     public void render(Graphics g) {
-        // kita ubah jadi graphics2d biar bisa atur ketebalan garis
         Graphics2D g2d = (Graphics2D) g;
-
-        // simpen settingan garis lama biar ga ngerusak gambar objek lain
         java.awt.Stroke oldStroke = g2d.getStroke();
 
-        // logika gambar visualnya
+        // bagian menggambar visual peluru
         if (isEnemy) {
-            // ini visual buat peluru alien warna merah
+            // jika ini peluru alien (warna merah)
 
-            // bikin efek cahaya merah transparan di sekelilingnya
+            // gambar efek cahaya pudar/transparan di sekitar peluru
             g2d.setColor(new Color(255, 0, 0, 80));
             g2d.fillOval(x - 4, y - 4, width + 8, height + 8);
 
-            // bikin inti pelurunya cincin merah
+            // gambar lingkaran inti peluru yang tegas
             g2d.setColor(Color.RED);
-            g2d.setStroke(new BasicStroke(2)); // garis tebal dikit
+            g2d.setStroke(new BasicStroke(2));
             g2d.drawOval(x, y, width, height);
-
         } else {
-            // ini visual buat peluru player warna cyan
+            // jika ini peluru pemain (warna biru muda/cyan)
 
-            // efek cahaya cyan transparan
+            // gambar efek cahaya pudar/transparan di sekitar peluru
             g2d.setColor(new Color(0, 255, 255, 80));
             g2d.fillOval(x - 4, y - 4, width + 8, height + 8);
 
-            // inti peluru cincin cyan
+            // gambar lingkaran inti peluru yang tegas
             g2d.setColor(Color.CYAN);
             g2d.setStroke(new BasicStroke(2));
             g2d.drawOval(x, y, width, height);
         }
 
-        // balikin settingan garis ke semula
         g2d.setStroke(oldStroke);
     }
 
     public void tick() {
-        // logika gerak lurus vertikal
-        if (isEnemy) {
-            // peluru alien gerak ke atas karena alien muncul dari bawah
-            y -= speed;
-        } else {
-            // peluru kita gerak ke bawah dari posisi player
-            y += speed;
-        }
+        // perbarui posisi pada variabel presisi (agar nilai koma 0.5 dsb tetap terhitung)
+        exactX += velX;
+        exactY += velY;
+
+        // konversi kembali ke bilangan bulat (integer) agar bisa digambar di layar
+        x = (int) exactX;
+        y = (int) exactY;
     }
 
-    // getter buat ngecek ini peluru siapa
     public boolean isEnemy() {
         return isEnemy;
     }

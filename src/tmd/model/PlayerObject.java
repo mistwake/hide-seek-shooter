@@ -29,16 +29,16 @@ public class PlayerObject extends GameObject {
 
         // kita cek biar player ga bablas keluar layar kiri
         if (x < 0) x = 0;
-        // cek juga biar ga keluar layar kanan dikurangin lebar player sama margin dikit
-        if (x > 800 - width - 15) x = 800 - width - 15;
+        // REVISI: Batas kanan diupdate jadi 1000 (sesuai canvas baru)
+        if (x > 1000 - width - 15) x = 1000 - width - 15;
 
         // update posisi y ditambah kecepatan saat ini
         y += velY;
 
         // cek biar ga nembus atap
         if (y < 0) y = 0;
-        // cek biar ga nembus lantai bawah
-        if (y > 600 - height - 40) y = 600 - height - 40;
+        // REVISI: Batas bawah diupdate jadi 800 (sesuai canvas baru)
+        if (y > 800 - height - 40) y = 800 - height - 40;
     }
 
     // ini setter buat ngubah kecepatan gerak dari input keyboard nanti

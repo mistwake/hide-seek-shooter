@@ -15,7 +15,7 @@ public class RockObject extends GameObject {
         try {
             // muat gambar batu dari file
             // kredit aset: gambar dri canva
-            rockImage = ImageIO.read(new File("rock.png"));
+            rockImage = ImageIO.read(new File("assets/rock.png"));
         } catch (IOException e) {
             System.err.println("error: gambar batu ga ketemu");
             e.printStackTrace();

@@ -29,7 +29,8 @@ public class GameWindow extends JFrame {
 
     public GameWindow() {
         setTitle("Hide and Seek Gameplay");
-        setSize(800, 650);
+        // pakai window ukuran 1000x800
+        setSize(1000, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false); // set ke false biar gabisa diresize
         setLocationRelativeTo(null);
@@ -37,7 +38,7 @@ public class GameWindow extends JFrame {
         // muat gambar background
         try {
             // kredit aset: background space diambil canva jg
-            bgImage = ImageIO.read(new File("background.png"));
+            bgImage = ImageIO.read(new File("assets/background.png"));
         } catch (IOException e) {
             System.out.println("gagal memuat background.png");
             e.printStackTrace();

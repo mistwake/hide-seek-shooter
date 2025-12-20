@@ -8,55 +8,61 @@ import javax.imageio.ImageIO;
 
 public class AlienObject extends GameObject {
 
-    private int velX; // arah gerak alien ke kiri atau kanan
-    private static Image alienImage; // variabel static biar gambarnya dimuat sekali aja
+    private static Image alienImage;
+    private PlayerObject targetPlayer;
 
-    // blok static ini jalan otomatis pas program pertama kali butuh alien
     static {
         try {
-            // baca file gambar alien dari folder proyek
-            // kredit aset: dari canva bu hehe
-            alienImage = ImageIO.read(new File("alien.png"));
+            alienImage = ImageIO.read(new File("assets/alien.png"));
         } catch (IOException e) {
-            System.err.println("error: gambar alien.png ga ketemu nih");
             e.printStackTrace();
         }
     }
 
-    public AlienObject(int x, int y, int speed) {
-        // panggil konstruktor induk, set ukuran alien agak gedean 85x60
+    public AlienObject(int x, int y, int speed, PlayerObject targetPlayer) {
         super(x, y, 85, 60, speed);
-        // kita acak dia gerak ke kiri atau kanan pas muncul
-        this.velX = Math.random() > 0.5 ? speed : -speed;
+        this.targetPlayer = targetPlayer;
     }
 
     @Override
     public void render(Graphics g) {
-        // kalo gambarnya berhasil dimuat ya kita gambar
         if (alienImage != null) {
             g.drawImage(alienImage, x, y, width, height, null);
-        }
-        // kalo gagal muat gambar kita kasih kotak merah, biar tau error
-        else {
+        } else {
             g.setColor(java.awt.Color.RED);
             g.fillRect(x, y, width, height);
         }
     }
 
-    // logika update alien tiap frame
     public void tick() {
-        x += velX;
+        if (targetPlayer != null) {
+            // membandingkan posisi, lalu gerak mendekat
 
-        // kalo nabrak tembok kiri dia mantul ke kanan
-        if (x < 0) {
-            x = 0;
-            velX = -velX;
+            // 1. cek Sumbu X
+            // kalau player ada di sebelah kanan alien, alien jalan ke kanan
+            if (targetPlayer.getX() > x) {
+                x += speed;
+            }
+            // kalau player ada di sebelah kiri alien, alien jalan ke kiri
+            else if (targetPlayer.getX() < x) {
+                x -= speed;
+            }
+
+            // 2. cek Sumbu Y
+            // kalau player ada di bawah alien, alien jalan ke bawah
+            if (targetPlayer.getY() > y) {
+                y += speed;
+            }
+            // kalau player ada di atas alien, alien jalan ke atas
+            else if (targetPlayer.getY() < y) {
+                y -= speed;
+            }
         }
 
-        // kalo nabrak tembok kanan dia mantul ke kiri
-        if (x > 800 - width) {
-            x = 800 - width;
-            velX = -velX;
-        }
+        // cek tabrakan dinding (biar ga keluar layar)
+        if (x < 0) x = 0;
+        if (x > 1000 - width) x = 1000 - width;
+        if (y < 0) y = 0;
+        if (y > 800 - height) y = 800 - height;
     }
 }
