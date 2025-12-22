@@ -32,7 +32,7 @@ public class BulletObject extends GameObject {
         double distance = Math.sqrt(dx * dx + dy * dy);
 
         // hitung kecepatan gerak untuk setiap langkah
-        // caranya: jarak per sumbu dibagi jarak total, lalu dikalikan dengan kecepatan (speed)
+        // caranya jarak per sumbu dibagi jarak total, lalu dikalikan dengan kecepatan (speed)
         if (distance != 0) {
             this.velX = (dx / distance) * speed;
             this.velY = (dy / distance) * speed;
@@ -77,7 +77,7 @@ public class BulletObject extends GameObject {
     }
 
     public void tick() {
-        // perbarui posisi pada variabel presisi (agar nilai koma 0.5 dsb tetap terhitung)
+        // perbarui posisi pada variabel presisi
         exactX += velX;
         exactY += velY;
 

@@ -12,6 +12,7 @@ public abstract class GameObject {
     // variable kecepatan gerak
     protected int speed;
 
+    // konstruktor untuk menginisialisasi properti dasar setiap objek game
     public GameObject(int x, int y, int width, int height, int speed) {
         this.x = x;
         this.y = y;

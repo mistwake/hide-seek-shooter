@@ -16,7 +16,7 @@ public class PlayerObject extends GameObject {
     // blok static buat load gambar pas awal
     static {
         try {
-            // muat gambar player dari file assets
+            // muat gambar player dari folder assets
             playerImage = ImageIO.read(new File("assets/player.png"));
         } catch (IOException e) {
             System.err.println("error: gambar player ga ketemu");
@@ -26,7 +26,6 @@ public class PlayerObject extends GameObject {
 
     public PlayerObject(int x, int y) {
         // kita panggil konstruktor induknya
-        // set posisi awal x y, terus ukurannya 30x30, sama speednya 5
         super(x, y, 40, 65, 5);
     }
 
@@ -36,7 +35,7 @@ public class PlayerObject extends GameObject {
         if (playerImage != null) {
             g.drawImage(playerImage, x, y, width, height, null);
         }
-        // jika gambar gagal dimuat, kembali ke kotak biru (fallback)
+        // jika gambar gagal dimuat, kembali ke kotak biru
         else {
             g.setColor(Color.BLUE);
             g.fillRect(x, y, width, height);
