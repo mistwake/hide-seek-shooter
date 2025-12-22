@@ -8,7 +8,7 @@ import java.awt.Graphics2D;
 public class BulletObject extends GameObject {
     private boolean isEnemy;
 
-    // variabel double diperlukan agar gerakan peluru bisa miring dengan halus
+    // variabel double dipakai supaya gerakan peluru bisa miring
     private double velX;
     private double velY;
     private double exactX, exactY; // posisi hitungan yang presisi (bisa menampung nilai koma)

@@ -38,7 +38,7 @@ public class AlienObject extends GameObject {
         if (targetPlayer != null) {
             // membandingkan posisi, lalu gerak mendekat
 
-            // 1. cek Sumbu X
+            // cek Sumbu X
             // kalau player ada di sebelah kanan alien, alien jalan ke kanan
             if (targetPlayer.getX() > x) {
                 x += speed;
@@ -48,7 +48,7 @@ public class AlienObject extends GameObject {
                 x -= speed;
             }
 
-            // 2. cek Sumbu Y
+            // cek Sumbu Y
             // kalau player ada di bawah alien, alien jalan ke bawah
             if (targetPlayer.getY() > y) {
                 y += speed;
