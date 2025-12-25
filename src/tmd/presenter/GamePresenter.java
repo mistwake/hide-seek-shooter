@@ -15,6 +15,9 @@ import tmd.model.TBenefitModel;
 import tmd.model.BulletObject;
 import tmd.model.RockObject;
 import javax.swing.JOptionPane;
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
 
 public class GamePresenter {
     private GameWindow view;
@@ -36,6 +39,10 @@ public class GamePresenter {
     private String username;
 
     private int waveNumber = 0;
+
+    // variabel untuk menyimpan klip audio
+    private Clip bgmClip;
+    private Clip shootClip;
 
     public GamePresenter(String username) {
         this.username = username;
@@ -65,6 +72,11 @@ public class GamePresenter {
         bullets = new ArrayList<>();
         view.setBullets(bullets);
 
+        // muat dan putar audio
+        bgmClip = loadAudio("assets/music.wav");
+        shootClip = loadAudio("assets/shoot.wav");
+        playMusic(bgmClip); // putar musik background secara looping
+
         // siapin kontrol keyboard
         setupInput();
 
@@ -79,6 +91,54 @@ public class GamePresenter {
         // mulai game
         gameTimer.start();
         view.setVisible(true);
+    }
+
+    // fungsi helper buat load file audio .wav
+    private Clip loadAudio(String path) {
+        try {
+            File audioFile = new File(path);
+            if (!audioFile.exists()) {
+                System.out.println("File audio tidak ditemukan: " + path);
+                return null;
+            }
+            AudioInputStream audioIn = AudioSystem.getAudioInputStream(audioFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioIn);
+            return clip;
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // fungsi buat muter musik background (looping)
+    private void playMusic(Clip clip) {
+        if (clip != null) {
+            clip.setFramePosition(0);
+            clip.loop(Clip.LOOP_CONTINUOUSLY); // Muter terus menerus
+            clip.start();
+        }
+    }
+
+    // fungsi buat muter sound effect (sekali main)
+    private void playSound(Clip clip) {
+        if (clip != null) {
+            // Stop dulu kalo lagi jalan, balikin ke awal, baru play
+            if (clip.isRunning()) clip.stop();
+            clip.setFramePosition(0);
+            clip.start();
+        }
+    }
+
+    // fungsi buat matiin musik
+    private void stopMusic() {
+        if (bgmClip != null) {
+            bgmClip.stop();
+            bgmClip.close();
+        }
+        if (shootClip != null) {
+            shootClip.close();
+        }
     }
 
     private void setupInput() {
@@ -99,6 +159,9 @@ public class GamePresenter {
 
                 // tombol 'space' buat berhenti dan kembali ke menu
                 if (key == KeyEvent.VK_SPACE) {
+                    // [BARU] Matikan musik sebelum keluar
+                    stopMusic();
+
                     gameTimer.stop();
                     view.dispose();
                     tmd.view.MenuWindow menu = new tmd.view.MenuWindow();
@@ -122,6 +185,9 @@ public class GamePresenter {
         // cuma bisa nembak kalo ada peluru
         if (currentAmmo > 0) {
             currentAmmo--;
+            // mainkan efek suara tembakan
+            playSound(shootClip);
+
             // player cmn bisa nembak lurus ke bawah
             // Target X = posisi player, Target Y = posisi jauh di bawah (e.g. y + 1000)
             BulletObject b = new BulletObject(player.getX() + 12, player.getY() + 30,
@@ -293,6 +359,9 @@ public class GamePresenter {
 
     // logika pas game over
     private void gameOver() {
+        // matikan musik saat game over
+        stopMusic();
+
         gameTimer.stop();
         // simpen skor dulu
         model.updatePlayerData(username, currentScore, currentMissed, currentAmmo);
